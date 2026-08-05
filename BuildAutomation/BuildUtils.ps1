@@ -462,14 +462,19 @@ function DownloadInstall-PythonMsi($platform, $python_template_dir, $pythonVersi
 }
 
 function DownloadInstall-PythonUsingPyManager($platform, $python_template_dir, $pythonVersion) {
-    $pythonManagerUrl = "https://www.python.org/ftp/python/pymanager/python-manager-26.1.msix"
-    $pythonManagerPath = Join-Path (Resolve-Path "${python_template_dir}/..").Path "/python-manager.exe"
+    $pythonManagerUrl = "https://www.python.org/ftp/python/pymanager/python-manager-26.3.msi"
+    $pythonManagerPath = Join-Path (Resolve-Path "${python_template_dir}/..").Path "/python-manager.msi"
+    $pythonManagerInstallLog = Join-Path (Resolve-Path "${python_template_dir}/..").Path "/python-manager.log"
+    $pymanagerPath = "C:\Program Files\PyManager\pymanager.exe"
 
-    $pythonManagerPackage = Get-AppPackage -Name PythonSoftwareFoundation.PythonManager -ErrorAction SilentlyContinue
+    Get-Package "Python Install Manager" -ErrorAction SilentlyContinue | Uninstall-Package
 
-    if (!$pythonManagerPackage) {
-        ExecRetry { DownloadFile $pythonManagerUrl $pythonManagerPath }
-        Add-AppPackage -Path $pythonManagerPath
+    ExecRetry { DownloadFile $pythonManagerUrl $pythonManagerPath }
+    cmd /c msiexec -i "${pythonManagerPath}" /qn /l*v "${pythonManagerInstallLog}"
+
+    $pythonManagerExists = Get-Command $pymanagerPath -ErrorAction SilentlyContinue
+    if (!$pythonManagerExists) {
+        throw "Failed to install Python Manager"
     }
 
     $platformSuffix = ""
@@ -485,7 +490,7 @@ function DownloadInstall-PythonUsingPyManager($platform, $python_template_dir, $
     }
 
     $pythonVersionEscaped = $pythonVersion.replace("_",".") + $platformSuffix
-    pymanager.exe install --target=$python_template_dir --force --update $pythonVersionEscaped
+    & "${pymanagerPath}" install --target=$python_template_dir --force --update $pythonVersionEscaped
     if ($LASTEXITCODE) {
         throw "Failed to install python in directory: ${python_template_dir}"
     }
