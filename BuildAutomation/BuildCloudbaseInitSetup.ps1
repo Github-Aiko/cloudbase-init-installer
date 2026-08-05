@@ -12,7 +12,7 @@ Param(
   [string]$SignTimestampUrl = "http://timestamp.digicert.com?alg=sha256",
   [string]$VCVars = "2019",
   [switch]$InstallOfficialPythonMsi = $false,
-  [string]$OfficialPythonMsiChecksum = "C10234D0D9BD89F6F6DD55BAE28EDE0F97EE0DF4",
+  [string]$OfficialPythonMsiChecksum = "F95758C1FE6F75CC33D8E65640B074676AB88CB3",
   [switch]$RemovePythonPycs = $false,
   [switch]$InstallOfficialPythonUsingPyManager = $false
 )
