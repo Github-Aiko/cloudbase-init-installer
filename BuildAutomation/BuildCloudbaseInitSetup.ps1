@@ -28,7 +28,7 @@ $platformVCVarsRequired = "x86_amd64"
 # On Visual Studio 2019, the mixed x86_amd64 VC variables
 # make compilation for x86 use the x64 functions
 if ($platform -eq "x86") {
-    $platformVCVarsRequired = "x86"
+    throw "Platform x86 is no longer supported. See https://github.com/cloudbase/cloudbase-init/issues/213"
 }
 
 # Fix required to allow for >= 255 characters paths. Required for Python folder bundling.
