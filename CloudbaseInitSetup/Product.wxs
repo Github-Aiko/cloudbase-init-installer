@@ -7,8 +7,13 @@
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
     <MediaTemplate EmbedCab="yes" CompressionLevel="mszip" />
 
-    <Property Id="CLOUDBASEINIT_SERVICE_EXISTS">
-      <ServiceSearch Id="CloudbaseInitServiceSearch" Name="cloudbase-init" Type="exists" />
+    <Property Id="CLOUDBASEINIT_SERVICE_EXISTS" Secure="yes">
+      <RegistrySearch Id="CloudbaseInitServiceSearch"
+                      Root="HKLM"
+                      Key="SYSTEM\CurrentControlSet\Services\cloudbase-init"
+                      Name="ImagePath"
+                      Type="raw"
+                      Win64="$(var.Win64)" />
     </Property>
     <Condition Message="Another Cloudbase-Init distribution is already installed. Uninstall it before installing Xylentis Cloudbase-Init.">
       Installed OR WIX_UPGRADE_DETECTED OR NOT CLOUDBASEINIT_SERVICE_EXISTS
