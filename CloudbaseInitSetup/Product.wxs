@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-  <Product Id="{ED85F19F-057A-4EE6-BC8D-F576DEACE78D}" Name="Cloudbase-Init $(var.VersionStr)" Language="1033" Version="$(var.Version)" Manufacturer="Cloudbase Solutions Srl" UpgradeCode="BA8F3CDD-9340-4852-8515-CF0BD5CA20E3">
+  <Product Id="*" Name="Xylentis Cloudbase-Init $(var.VersionStr)" Language="1033" Version="$(var.Version)" Manufacturer="Xylentis" UpgradeCode="8DA03731-C612-48A8-9A9F-658D875DB675">
     <?include $(sys.CURRENTDIR)\Config.wxi?>
     <Package InstallerVersion="301" Compressed="yes" InstallScope="perMachine" InstallPrivileges="elevated" Platform="$(var.Platform)"/>
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
     <MediaTemplate EmbedCab="yes" CompressionLevel="mszip" />
+
+    <Property Id="CLOUDBASEINIT_SERVICE_EXISTS">
+      <ServiceSearch Id="CloudbaseInitServiceSearch" Name="cloudbase-init" Type="exists" />
+    </Property>
+    <Condition Message="Another Cloudbase-Init distribution is already installed. Uninstall it before installing Xylentis Cloudbase-Init.">
+      Installed OR WIX_UPGRADE_DETECTED OR NOT CLOUDBASEINIT_SERVICE_EXISTS
+    </Condition>
 
     <?if $(var.Platform) = x64 ?>
     <?define Win64 = "yes" ?>
@@ -15,8 +22,8 @@
     <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
     <?endif ?>
 
-    <Feature Id="CloudbaseInit" Title="Windows Cloud Init" Level="1" Absent="disallow" InstallDefault="local" TypicalDefault="install" AllowAdvertise="no"
-             Description="Installs and configures the cloudbase-init service."
+    <Feature Id="CloudbaseInit" Title="Xylentis Windows Cloud Init" Level="1" Absent="disallow" InstallDefault="local" TypicalDefault="install" AllowAdvertise="no"
+             Description="Installs and configures the Xylentis Cloudbase-Init distribution."
              ConfigurableDirectory="INSTALLDIR" Display="expand">
       <ComponentGroupRef Id="PythonComponentGroup" />
       <ComponentGroupRef Id="CloudbaseInitFolders" />
@@ -34,6 +41,9 @@
     </Feature>
 
     <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+    <Property Id="ARPURLINFOABOUT" Value="https://xylentis.com/" />
+    <Property Id="ARPHELPLINK" Value="https://xylentis.com/" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://github.com/Github-Aiko/cloudbase-init-installer/releases" />
 
     <Property Id="MAAS_METADATA_URL" />
     <Property Id="MAAS_OAUTH_CONSUMER_KEY" />
@@ -96,7 +106,7 @@
   <Fragment>
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="$(var.PlatformProgramFilesFolder)">
-        <Directory Id="CompanyFolder" Name="Cloudbase Solutions">
+        <Directory Id="CompanyFolder" Name="Xylentis">
           <Directory Id="INSTALLDIR" Name="Cloudbase-Init" />
         </Directory>
       </Directory>
@@ -200,8 +210,8 @@
                Type="ownProcess"
                Vital="yes"
                Name="cloudbase-init"
-               DisplayName="Cloudbase-Init"
-               Description="Cloud Initialization Service"
+               DisplayName="Xylentis Cloudbase-Init"
+               Description="Xylentis Windows cloud initialization service based on Cloudbase-Init"
                Start="auto"
                Account="[CloudbaseInitServiceUser]"
                Password="[GENERATED_PASSWORD]"

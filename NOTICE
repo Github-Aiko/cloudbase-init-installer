@@ -1,0 +1,10 @@
+Xylentis Cloudbase-Init Installer
+Copyright 2026 Xylentis
+
+This distribution contains software derived from the Cloudbase-Init installer
+and Cloudbase-Init projects. The original projects are Copyright Cloudbase
+Solutions Srl and contributors and are licensed under the Apache License 2.0.
+
+Xylentis modifications include distribution branding, build defaults, and
+integration with the Xylentis Cloudbase-Init fork. Xylentis branding does not
+imply endorsement by Cloudbase Solutions or the upstream contributors.

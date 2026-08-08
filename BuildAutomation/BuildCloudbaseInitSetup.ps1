@@ -4,10 +4,12 @@ Param(
   [string]$SignX509Thumbprint = $null,
   [string]$release = $null,
   # Cloudbase-Init repo details
-  [string]$CloudbaseInitRepoUrl = "https://github.com/cloudbase/cloudbase-init.git",
+  [string]$CloudbaseInitRepoUrl = "https://github.com/Github-Aiko/cloudbase-init.git",
   [string]$CloudbaseInitRepoBranch = "master",
+  [string]$CloudbaseInitConstraintsUrl = $null,
   # Use an already available installer or clone a new one.
   [switch]$ClonePullInstallerRepo = $true,
+  [string]$InstallerRepoUrl = "https://github.com/Github-Aiko/cloudbase-init-installer.git",
   [string]$VSRedistDir = "${ENV:ProgramFiles(x86)}\Common Files\Merge Modules",
   [string]$SignTimestampUrl = "http://timestamp.digicert.com?alg=sha256",
   [string]$VCVars = "2019",
@@ -61,7 +63,7 @@ try
         # Clone a new installer repo no matter what.
         $cloudbaseInitInstallerDir = join-Path $basepath "cloudbase-init-installer"
         ExecRetry {
-            GitClonePull $cloudbaseInitInstallerDir "https://github.com/cloudbase/cloudbase-init-installer.git"
+            GitClonePull $cloudbaseInitInstallerDir $InstallerRepoUrl
         }
     }
     else
@@ -114,8 +116,13 @@ try
     mkdir ".\requirements"
     $upper_constraints_path = ".\requirements\upper-constraints.txt"
     $upper_constraints_file = Join-Path (Resolve-Path ".\requirements") "upper-constraints.txt"
+    if (!$CloudbaseInitConstraintsUrl) {
+        $constraints_repo_path = $CloudbaseInitRepoUrl -replace "^https://github.com/", ""
+        $constraints_repo_path = $constraints_repo_path -replace "\.git$", ""
+        $CloudbaseInitConstraintsUrl = "https://raw.githubusercontent.com/${constraints_repo_path}/refs/heads/${CloudbaseInitRepoBranch}/upper-constraints.txt"
+    }
     try {
-        ExecRetry { DownloadFile "https://raw.githubusercontent.com/cloudbase/cloudbase-init/refs/heads/${CloudbaseInitRepoBranch}/upper-constraints.txt" $upper_constraints_file }
+        ExecRetry { DownloadFile $CloudbaseInitConstraintsUrl $upper_constraints_file }
     } catch {
         ExecRetry { DownloadFile "https://raw.githubusercontent.com/openstack/requirements/refs/heads/master/upper-constraints.txt" $upper_constraints_file }
     }
@@ -155,7 +162,7 @@ try
     CheckCopyDir $python_dir $python_dir_release
     CheckCopyDir $bin_dir $bin_dir_release
 
-    $zip_path = join-path $release_dir "CloudbaseInitSetup.zip"
+    $zip_path = join-path $release_dir "XylentisCloudbaseInitSetup.zip"
     if (Test-Path $zip_path) {
         del $zip_path
     }
@@ -207,7 +214,7 @@ try
     &msbuild CloudbaseInitSetup.sln /m /p:Platform=$platform /p:Configuration=`"Release`"  /p:DefineConstants=`"PythonSourcePath=$python_dir`;CarbonSourcePath=Carbon`;Version=$msi_version`;VersionStr=$version`"
     if ($LastExitCode) { throw "MSBuild failed" }
 
-    $msi_path = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\bin\Release\$platform\CloudbaseInitSetup.msi"
+    $msi_path = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\bin\Release\$platform\XylentisCloudbaseInitSetup.msi"
 
     if($SignX509Thumbprint)
     {

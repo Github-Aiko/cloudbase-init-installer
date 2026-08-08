@@ -1,0 +1,90 @@
+name: Release Xylentis Cloudbase-Init
+
+on:
+  push:
+    tags:
+      - '*.*.*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-release:
+    runs-on: windows-2022
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v3
+
+    - name: Build release MSI and ZIP
+      shell: cmd
+      run: >-
+        powershell.exe .\BuildAutomation\BuildCloudbaseInitSetup.ps1
+        -ClonePullInstallerRepo:$false
+        -PythonVersion 3.14_6
+        -Platform x64
+        -VCVars "automatic"
+        -VSRedistDir "''"
+        -CloudbaseInitRepoUrl "https://github.com/Github-Aiko/cloudbase-init.git"
+        -CloudbaseInitRepoBranch "${{ github.ref_name }}"
+        -CloudbaseInitConstraintsUrl "https://raw.githubusercontent.com/Github-Aiko/cloudbase-init/refs/tags/${{ github.ref_name }}/upper-constraints.txt"
+        -InstallOfficialPythonMsi:$true
+        -OfficialPythonMsiChecksum "C10234D0D9BD89F6F6DD55BAE28EDE0F97EE0DF4"
+        -RemovePythonPycs:$true
+        -InstallOfficialPythonUsingPyManager:$true
+
+    - name: Create checksums
+      shell: powershell
+      run: |
+        $releaseDir = "CloudbaseInitSetup/bin/Release/x64"
+        $files = @(
+          "${releaseDir}/XylentisCloudbaseInitSetup.msi",
+          "${releaseDir}/XylentisCloudbaseInitSetup.zip"
+        )
+        foreach ($file in $files) {
+          if (!(Test-Path $file)) {
+            throw "Missing release artifact: $file"
+          }
+        }
+        Get-FileHash $files -Algorithm SHA256 |
+          ForEach-Object { "{0}  {1}" -f $_.Hash.ToLower(), (Split-Path $_.Path -Leaf) } |
+          Out-File -Encoding ascii "${releaseDir}/SHA256SUMS.txt"
+
+    - name: Upload workflow artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: XylentisCloudbaseInit-${{ github.ref_name }}-x64
+        path: |
+          CloudbaseInitSetup/bin/Release/x64/XylentisCloudbaseInitSetup.msi
+          CloudbaseInitSetup/bin/Release/x64/XylentisCloudbaseInitSetup.zip
+          CloudbaseInitSetup/bin/Release/x64/SHA256SUMS.txt
+
+    - name: Publish GitHub Release
+      shell: powershell
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        $releaseDir = "CloudbaseInitSetup/bin/Release/x64"
+        $notes = @"
+        Xylentis Cloudbase-Init ${{ github.ref_name }}
+
+        - Proxmox dual-stack IPv4/IPv6 network configuration support
+        - Xylentis-branded Windows x64 installer
+        - Bundled Python 3.14.6 runtime
+
+        See SHA256SUMS.txt for artifact checksums.
+        "@
+        $notes | Out-File -Encoding utf8 release-notes.md
+        gh release create "${{ github.ref_name }}" `
+          "${releaseDir}/XylentisCloudbaseInitSetup.msi" `
+          "${releaseDir}/XylentisCloudbaseInitSetup.zip" `
+          "${releaseDir}/SHA256SUMS.txt" `
+          --title "Xylentis Cloudbase-Init ${{ github.ref_name }}" `
+          --notes-file release-notes.md `
+          --verify-tag

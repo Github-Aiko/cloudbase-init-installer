@@ -1,6 +1,10 @@
-name: Cloudbase-Init - build and functionally test MSI
+name: Xylentis Cloudbase-Init - build and functionally test MSI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
 
 env:
   TEST_RESOURCES: "https://github.com/cloudbase/cloudbase-init-test-resources"
@@ -16,11 +20,11 @@ jobs:
         download_official_python_msi: ["true", "false"]
         remove_python_pycs: ["true"]
         install_with_pymanager: ["true"]
-        cbsinit_repo: ['https://github.com/cloudbase/cloudbase-init']
+        cbsinit_repo: ['https://github.com/Github-Aiko/cloudbase-init']
         cbsinit_branch: ['master']
         python_version: ['3.14_6']
         platform: ['x64']
-        cloud: [openstack] 
+        cloud: [openstack]
 
     steps:
     - uses: actions/checkout@v6
@@ -43,8 +47,10 @@ jobs:
             -InstallOfficialPythonUsingPyManager:$${{ matrix.install_with_pymanager }}
     - uses: actions/upload-artifact@v7
       with:
-        name: "CloudbaseInit_platform-${{ matrix.platform }}_build-env-os-${{ matrix.os }}_download-official-msi-${{ matrix.download_official_python_msi }}_remove-pycs-${{ matrix.remove_python_pycs }}_install-with-pymanager${{ matrix.install_with_pymanager }}_cbs-init-branch-${{ matrix.cbsinit_branch }}_MSI"
-        path: 'CloudbaseInitSetup/bin/release/${{ matrix.platform }}/CloudbaseInitSetup.msi'
+        name: "XylentisCloudbaseInit_${{ matrix.platform }}_${{ matrix.os }}_official-python-${{ matrix.download_official_python_msi }}"
+        path: |
+          CloudbaseInitSetup/bin/release/${{ matrix.platform }}/XylentisCloudbaseInitSetup.msi
+          CloudbaseInitSetup/bin/release/${{ matrix.platform }}/XylentisCloudbaseInitSetup.zip
 
     - name: Install MSI and functionally test Cloudbase-Init
       shell: powershell
@@ -52,7 +58,7 @@ jobs:
         $Erroractionpreference = "Continue"
         $log = "install.log"
         touch $log
-        $msiPath = (Resolve-Path "CloudbaseInitSetup/bin/release/${{ matrix.platform }}/CloudbaseInitSetup.msi").Path
+        $msiPath = (Resolve-Path "CloudbaseInitSetup/bin/release/${{ matrix.platform }}/XylentisCloudbaseInitSetup.msi").Path
         Write-Output $msiPath
         echo $msiPath
         $procMain = Start-Process "msiexec" "/i `"$msiPath`" /qn /l*! `"$log`"" -NoNewWindow -PassThru
@@ -70,10 +76,10 @@ jobs:
       run: |
         Install-Module -Force -AllowClobber -Confirm:$false "Pester"
         $ENV:CLOUD = "${{ matrix.cloud }}"
-        $ENV:TEST_ARCHITECTURE = "${{ matrix.architecture }}"
+        $ENV:TEST_ARCHITECTURE = "${{ matrix.platform }}"
         Invoke-Pester test-resources/functional-tests -Output Detailed -FullNameFilter TestVerifyBeforeAllPlugins
 
-        $baseDir = "C:\\Program Files\Cloudbase Solutions\Cloudbase-Init\"
+        $baseDir = "C:\\Program Files\Xylentis\Cloudbase-Init\"
         Copy-Item -Force "$(pwd)/test-resources/${{ matrix.cloud }}/cloudbase-init.conf" "${baseDir}/conf/cloudbase-init.conf"
 
         $confFileData = Get-Content "${baseDir}/conf/cloudbase-init.conf" -Raw
@@ -101,8 +107,8 @@ jobs:
     - name: Audit Cloudbase-Init pip packages
       shell: powershell
       run: |
-        $pythonPath = "C:\\Program Files\Cloudbase Solutions\Cloudbase-Init\Python\python.exe"
-        $pipAuditPath = "C:\\Program Files\Cloudbase Solutions\Cloudbase-Init\Python\Scripts\pip-audit.exe"
+        $pythonPath = "C:\\Program Files\Xylentis\Cloudbase-Init\Python\python.exe"
+        $pipAuditPath = "C:\\Program Files\Xylentis\Cloudbase-Init\Python\Scripts\pip-audit.exe"
         & "${pythonPath}" -m pip install pip-audit
         $pipAuditLogs = & "${pipAuditPath}"
         Write-Output "$pipAuditLogs"
