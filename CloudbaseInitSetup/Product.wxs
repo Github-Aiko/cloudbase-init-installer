@@ -7,6 +7,14 @@
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
     <MediaTemplate EmbedCab="yes" CompressionLevel="mszip" />
 
+    <?if $(var.Platform) = x64 ?>
+    <?define Win64 = "yes" ?>
+    <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
+    <?else ?>
+    <?define Win64 = "no" ?>
+    <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
+    <?endif ?>
+
     <Property Id="CLOUDBASEINIT_SERVICE_EXISTS" Secure="yes">
       <RegistrySearch Id="CloudbaseInitServiceSearch"
                       Root="HKLM"
@@ -18,14 +26,6 @@
     <Condition Message="Another Cloudbase-Init distribution is already installed. Uninstall it before installing Xylentis Cloudbase-Init.">
       Installed OR WIX_UPGRADE_DETECTED OR NOT CLOUDBASEINIT_SERVICE_EXISTS
     </Condition>
-
-    <?if $(var.Platform) = x64 ?>
-    <?define Win64 = "yes" ?>
-    <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
-    <?else ?>
-    <?define Win64 = "no" ?>
-    <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
-    <?endif ?>
 
     <Feature Id="CloudbaseInit" Title="Xylentis Windows Cloud Init" Level="1" Absent="disallow" InstallDefault="local" TypicalDefault="install" AllowAdvertise="no"
              Description="Installs and configures the Xylentis Cloudbase-Init distribution."
