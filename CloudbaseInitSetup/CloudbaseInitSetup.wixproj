@@ -8,6 +8,10 @@
     <SchemaVersion>2.0</SchemaVersion>
     <OutputName>XylentisCloudbaseInitSetup</OutputName>
     <OutputType>Package</OutputType>
+    <CloudbaseInitPythonSourcePath Condition=" '$(CloudbaseInitPythonSourcePath)' == '' ">Python_CloudbaseInit</CloudbaseInitPythonSourcePath>
+    <CloudbaseInitCarbonSourcePath Condition=" '$(CloudbaseInitCarbonSourcePath)' == '' ">Carbon</CloudbaseInitCarbonSourcePath>
+    <CloudbaseInitMsiVersion Condition=" '$(CloudbaseInitMsiVersion)' == '' ">1.0.0.0</CloudbaseInitMsiVersion>
+    <CloudbaseInitVersionStr Condition=" '$(CloudbaseInitVersionStr)' == '' ">1.0.0.0</CloudbaseInitVersionStr>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
     <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
   </PropertyGroup>
@@ -19,7 +23,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>bin\$(Configuration)\$(platform)\</OutputPath>
     <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>PythonSourcePath=Python_CloudbaseInit;CarbonSourcePath=Carbon;Version=1.0.0.0;VersionStr=1.0.0.0</DefineConstants>
+    <DefineConstants>PythonSourcePath=$(CloudbaseInitPythonSourcePath);CarbonSourcePath=$(CloudbaseInitCarbonSourcePath);Version=$(CloudbaseInitMsiVersion);VersionStr=$(CloudbaseInitVersionStr)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <DefineConstants>Debug</DefineConstants>
@@ -27,7 +31,7 @@
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <DefineConstants>PythonSourcePath=Python_CloudbaseInit;CarbonSourcePath=Carbon;Version=1.0.0.0;VersionStr=1.0.0.0</DefineConstants>
+    <DefineConstants>PythonSourcePath=$(CloudbaseInitPythonSourcePath);CarbonSourcePath=$(CloudbaseInitCarbonSourcePath);Version=$(CloudbaseInitMsiVersion);VersionStr=$(CloudbaseInitVersionStr)</DefineConstants>
     <OutputPath>bin\$(Configuration)\$(platform)\</OutputPath>
     <IntermediateOutputPath>obj\$(Platform)\$(Configuration)\</IntermediateOutputPath>
   </PropertyGroup>
