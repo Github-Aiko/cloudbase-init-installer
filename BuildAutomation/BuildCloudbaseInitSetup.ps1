@@ -38,6 +38,23 @@ Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "Long
 
 SetVCVars $VCVars $platformVCVarsRequired
 
+# Build with the toolset provided by the selected Visual Studio installation.
+# The project defaults to v142 for compatibility with the original VS 2019
+# build environment, but newer runners do not necessarily install that
+# optional legacy component.
+$visualStudioMajorVersion = $ENV:VisualStudioVersion.Split('.')[0]
+$platformToolsets = @{
+    "15" = "v141"
+    "16" = "v142"
+    "17" = "v143"
+    "18" = "v145"
+}
+$platformToolset = $platformToolsets[$visualStudioMajorVersion]
+if (!$platformToolset) {
+    throw "Unsupported Visual Studio version: $ENV:VisualStudioVersion"
+}
+Write-Host "Using Visual Studio $ENV:VisualStudioVersion platform toolset $platformToolset"
+
 # Needed for SSH
 $ENV:HOME = $ENV:USERPROFILE
 
@@ -214,6 +231,7 @@ try
         "/m",
         "/p:Platform=$platform",
         "/p:Configuration=Release",
+        "/p:PlatformToolset=$platformToolset",
         "/p:DefineConstants=PythonSourcePath=$python_dir;CarbonSourcePath=Carbon;Version=$msi_version;VersionStr=$version"
     )
     & msbuild @msbuildArguments
