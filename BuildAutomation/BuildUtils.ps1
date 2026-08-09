@@ -184,7 +184,7 @@ function SetVCVars($version="2019", $platform="x86_amd64") {
     if ($version -eq "automatic") {
         $preferedVersions = @("18", "2022", "2019", "2017")
     }
-    $vsInstallTypes = @("Community", "Enterprise")
+    $vsInstallTypes = @("Community", "Enterprise", "BuildTools")
     $vsInstallArchTypes = @("$ENV:ProgramFiles (x86)", "$ENV:ProgramFiles")
     $vsInstallBuildFolder = $null
 
