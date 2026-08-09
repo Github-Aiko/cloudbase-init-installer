@@ -17,7 +17,6 @@ build-windows-installer:
   stage: build
   tags:
     - windows
-    - windows-shell
   timeout: 2h
   script:
     - |
