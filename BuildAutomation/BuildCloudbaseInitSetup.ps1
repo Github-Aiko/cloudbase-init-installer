@@ -265,6 +265,15 @@ try
 
     cd $cloudbaseInitInstallerDir
 
+    # MSBuild treats semicolons in a /p argument as property separators. Escape
+    # them so WiX receives the complete DefineConstants value.
+    $defineConstants = (
+        "PythonSourcePath=$python_dir%3B" +
+        "CarbonSourcePath=Carbon%3B" +
+        "Version=$msi_version%3B" +
+        "VersionStr=$version"
+    )
+
     $msbuildArguments = @(
         "CloudbaseInitSetup.sln",
         "/m",
@@ -272,7 +281,7 @@ try
         "/p:Configuration=Release",
         "/p:PlatformToolset=$platformToolset",
         "/p:WixTargetsPath=$wixTargetsPath",
-        "/p:DefineConstants=PythonSourcePath=$python_dir;CarbonSourcePath=Carbon;Version=$msi_version;VersionStr=$version"
+        "/p:DefineConstants=$defineConstants"
     )
     & msbuild @msbuildArguments
     if ($LastExitCode) { throw "MSBuild failed" }
