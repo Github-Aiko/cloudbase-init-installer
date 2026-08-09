@@ -209,7 +209,14 @@ try
 
     cd $cloudbaseInitInstallerDir
 
-    &msbuild CloudbaseInitSetup.sln /m /p:Platform=$platform /p:Configuration=`"Release`"  /p:DefineConstants=`"PythonSourcePath=$python_dir`;CarbonSourcePath=Carbon`;Version=$msi_version`;VersionStr=$version`"
+    $msbuildArguments = @(
+        "CloudbaseInitSetup.sln",
+        "/m",
+        "/p:Platform=$platform",
+        "/p:Configuration=Release",
+        "/p:DefineConstants=PythonSourcePath=$python_dir;CarbonSourcePath=Carbon;Version=$msi_version;VersionStr=$version"
+    )
+    & msbuild @msbuildArguments
     if ($LastExitCode) { throw "MSBuild failed" }
 
     $msi_path = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\bin\Release\$platform\XylentisCloudbaseInitSetup.msi"
