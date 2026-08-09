@@ -98,7 +98,29 @@ function CreateZip($zipPath, $path)
         Remove-Item -Force $zipPath
     }
 
-    Compress-Archive -Path $path -DestinationPath $zipPath -CompressionLevel Optimal
+    $sevenZipCommand = Get-Command 7z.exe -ErrorAction SilentlyContinue
+    $sevenZipPath = if ($sevenZipCommand) {
+        $sevenZipCommand.Source
+    }
+    else {
+        @(
+            "$env:ProgramFiles\7-Zip\7z.exe",
+            "${env:ProgramFiles(x86)}\7-Zip\7z.exe"
+        ) | Where-Object { Test-Path $_ -PathType Leaf } | Select-Object -First 1
+    }
+
+    if ($sevenZipPath) {
+        Write-Host "Creating ZIP with $sevenZipPath"
+        & $sevenZipPath a -tzip -mx=9 -r $zipPath $path
+        if ($LastExitCode) {
+            throw "7-Zip failed to create archive: $zipPath"
+        }
+    }
+    else {
+        Write-Host "7-Zip not found; using Compress-Archive"
+        Compress-Archive -Path $path -DestinationPath $zipPath -CompressionLevel Optimal
+    }
+
     if (!(Test-Path $zipPath -PathType Leaf)) {
         throw "Failed to create ZIP archive: $zipPath"
     }

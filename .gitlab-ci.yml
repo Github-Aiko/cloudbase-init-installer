@@ -31,7 +31,7 @@ build-windows-installer:
           -PythonVersion $env:PYTHON_VERSION `
           -Platform $env:PLATFORM `
           -VCVars "automatic" `
-          -VSRedistDir "''" `
+          -VSRedistDir "" `
           -CloudbaseInitRepoUrl $env:CBSINIT_REPO `
           -CloudbaseInitRepoBranch $sourceBranch `
           -CloudbaseInitConstraintsUrl $constraintsUrl `
