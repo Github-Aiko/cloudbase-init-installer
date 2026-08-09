@@ -55,6 +55,33 @@ if (!$platformToolset) {
 }
 Write-Host "Using Visual Studio $ENV:VisualStudioVersion platform toolset $platformToolset"
 
+# Chocolatey can install WiX while the runner service is already running, so
+# its new machine-level WIX variable is not visible in the current process.
+# Discover the SDK explicitly because UtilsActions needs wcautil.h and the
+# native WiX libraries in addition to the MSBuild targets.
+$wixRootCandidates = @(
+    $ENV:WIX,
+    [Environment]::GetEnvironmentVariable("WIX", "Machine")
+)
+$wixInstallBase = "${ENV:ProgramFiles(x86)}"
+if (Test-Path $wixInstallBase -PathType Container) {
+    $wixRootCandidates += Get-ChildItem $wixInstallBase -Directory `
+        -Filter "WiX Toolset v3.*" -ErrorAction SilentlyContinue |
+        Sort-Object Name -Descending |
+        Select-Object -ExpandProperty FullName
+}
+$wixRoot = $wixRootCandidates |
+    Where-Object {
+        $_ -and (Test-Path (Join-Path $_ "sdk\VS2015\inc\wcautil.h") `
+            -PathType Leaf)
+    } |
+    Select-Object -First 1
+if (!$wixRoot) {
+    throw "WiX v3 SDK was not found. Install it with: choco install wixtoolset -y --no-progress"
+}
+$ENV:WIX = $wixRoot.TrimEnd('\') + '\'
+Write-Host "Using WiX SDK from $ENV:WIX"
+
 # Needed for SSH
 $ENV:HOME = $ENV:USERPROFILE
 
