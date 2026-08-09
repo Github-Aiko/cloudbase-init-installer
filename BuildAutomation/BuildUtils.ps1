@@ -179,43 +179,65 @@ function PipInstall($package, $allow_dev=$false, $update=$false)
 }
 
 function SetVCVars($version="2019", $platform="x86_amd64") {
-
-    $preferedVersions = @("$version")
+    $preferredVersions = @("$version")
     if ($version -eq "automatic") {
-        $preferedVersions = @("18", "2022", "2019", "2017")
+        $preferredVersions = @("18", "2022", "2019", "2017")
     }
     $vsInstallTypes = @("Community", "Enterprise", "BuildTools")
-    $vsInstallArchTypes = @("$ENV:ProgramFiles (x86)", "$ENV:ProgramFiles")
-    $vsInstallBuildFolder = $null
+    $vsInstallArchTypes = @("${ENV:ProgramFiles(x86)}", "$ENV:ProgramFiles")
+    $vcvarsAll = $null
 
-    foreach ($vsInstallArchType in $vsInstallArchTypes) {
-        foreach ($vsInstallType in $vsInstallTypes) {
-          foreach ($preferedVersion in $preferedVersions) {
-            $vsInstallBuildFolderCheck = "${vsInstallArchType}\Microsoft Visual Studio\${preferedVersion}\${vsInstallType}\VC\Auxiliary\Build"
-            if (Test-Path $vsInstallBuildFolderCheck) {
-                $vsInstallBuildFolder = $vsInstallBuildFolderCheck
-                break
-            } else {
-                Write-Host "${vsInstallBuildFolderCheck} does not exist"
-            }
-	  }
+    if ($version -eq "automatic") {
+        $vswhere = "${ENV:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+        if (Test-Path $vswhere -PathType Leaf) {
+            $vcvarsAll = & $vswhere -latest -products * `
+                -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+                -find "VC\Auxiliary\Build\vcvarsall.bat" |
+                Select-Object -First 1
         }
     }
-    if ($vsInstallBuildFolder -eq $null) {
-        throw "Visual Studio installation has not been found"
+
+    if (!$vcvarsAll) {
+        :VisualStudioSearch foreach ($vsInstallArchType in $vsInstallArchTypes) {
+            foreach ($vsInstallType in $vsInstallTypes) {
+                foreach ($preferredVersion in $preferredVersions) {
+                    $candidate = "${vsInstallArchType}\Microsoft Visual Studio\${preferredVersion}\${vsInstallType}\VC\Auxiliary\Build\vcvarsall.bat"
+                    if (Test-Path $candidate -PathType Leaf) {
+                        $vcvarsAll = $candidate
+                        break VisualStudioSearch
+                    }
+                    Write-Host "${candidate} does not exist"
+                }
+            }
+        }
     }
 
-    pushd $vsInstallBuildFolder
+    if (!$vcvarsAll) {
+        throw "Microsoft Visual C++ 14.0+ has not been found. Install the Visual Studio 'Desktop development with C++' workload (Microsoft.VisualStudio.Workload.VCTools)."
+    }
+
+    Write-Host "Loading Visual Studio environment from $vcvarsAll"
+    pushd (Split-Path $vcvarsAll -Parent)
     try {
-        cmd /c "vcvarsall.bat $platform & set" |
-        foreach {
-          if ($_ -match "=") {
-            $v = $_.split("="); set-item -force -path "ENV:\$($v[0])"  -value "$($v[1])"
-          }
+        $visualStudioEnvironment = cmd.exe /d /c "vcvarsall.bat $platform && set"
+        if ($LastExitCode) {
+            throw "vcvarsall.bat failed with exit code $LastExitCode"
         }
     }
     finally {
         popd
+    }
+
+    foreach ($line in $visualStudioEnvironment) {
+        if ($line -notmatch "^[^=][^=]*=") {
+            continue
+        }
+        $name, $value = $line -split "=", 2
+        Set-Item -Force -Path "ENV:\$name" -Value $value
+    }
+
+    if (!(Get-Command cl.exe -ErrorAction SilentlyContinue)) {
+        throw "vcvarsall.bat completed, but cl.exe is unavailable. Repair the Visual C++ x64/x86 build tools workload."
     }
 }
 
