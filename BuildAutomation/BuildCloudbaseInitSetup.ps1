@@ -82,6 +82,18 @@ if (!$wixRoot) {
 $ENV:WIX = $wixRoot.TrimEnd('\') + '\'
 Write-Host "Using WiX SDK from $ENV:WIX"
 
+$wixTargetsCandidates = @(
+    "${ENV:ProgramFiles(x86)}\MSBuild\Microsoft\WiX\v3.x\Wix.targets",
+    "$ENV:ProgramFiles\MSBuild\Microsoft\WiX\v3.x\Wix.targets"
+)
+$wixTargetsPath = $wixTargetsCandidates |
+    Where-Object { Test-Path $_ -PathType Leaf } |
+    Select-Object -First 1
+if (!$wixTargetsPath) {
+    throw "WiX v3 MSBuild targets were not found. Repair the wixtoolset Chocolatey package."
+}
+Write-Host "Using WiX MSBuild targets from $wixTargetsPath"
+
 # Needed for SSH
 $ENV:HOME = $ENV:USERPROFILE
 
@@ -259,6 +271,7 @@ try
         "/p:Platform=$platform",
         "/p:Configuration=Release",
         "/p:PlatformToolset=$platformToolset",
+        "/p:WixTargetsPath=$wixTargetsPath",
         "/p:DefineConstants=PythonSourcePath=$python_dir;CarbonSourcePath=Carbon;Version=$msi_version;VersionStr=$version"
     )
     & msbuild @msbuildArguments
