@@ -94,8 +94,14 @@ function PullInstall($path, $url, $branch="master")
 
 function CreateZip($zipPath, $path)
 {
-    &7z.exe a -r $zipPath $path
-    if ($LastExitCode) { throw "7z.exe failed to create archive: $archive"}
+    if (Test-Path $zipPath) {
+        Remove-Item -Force $zipPath
+    }
+
+    Compress-Archive -Path $path -DestinationPath $zipPath -CompressionLevel Optimal
+    if (!(Test-Path $zipPath -PathType Leaf)) {
+        throw "Failed to create ZIP archive: $zipPath"
+    }
 }
 
 function Expand7z($archive, $outputDir = ".")

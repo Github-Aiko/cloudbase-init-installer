@@ -44,8 +44,6 @@ $ENV:HOME = $ENV:USERPROFILE
 $basepath = Join-path $scriptPath "build\cloudbase-init"
 
 $ENV:PATH += ";$ENV:ProgramFiles (x86)\Git\bin\"
-$ENV:PATH += ";$ENV:ProgramFiles\7-zip\"
-
 CheckDir $basepath
 
 pushd .
