@@ -17,7 +17,7 @@ build-windows-installer:
   stage: build
   tags:
     - windows
-    - windows-runner-17
+    - windows-shell
   timeout: 2h
   script:
     - |
